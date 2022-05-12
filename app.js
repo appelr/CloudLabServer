@@ -1,25 +1,48 @@
 // Require modules
 require('dotenv').config();
 var express = require('express');
-var path = require('path');
 var http = require('http');
-var indexRouter = require('./server/routes/index');
-var calcRouter = require('./server/routes/calc');
 
 // Create express app
 var app = express();
 
-var port = process.env.PORT || '8080';
+var port = process.env.PORT || '3000';
 app.set('port', port);
 
 // Configure express app
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
 
-// Add express routes
-app.use('/', indexRouter);
-app.use('/calc', calcRouter);
+const MAX_LENGTH_WORD = 10;
+
+// Route for the frequency counter
+app.post('/getWordLengthFrequency', function (req, res) {
+	var data = req.body.data;
+
+  console.log("post requested received with data: ");
+  console.log(data);
+  
+  // Create result array and fill it with initial values
+  var result = new Array(MAX_LENGTH_WORD);
+  result.fill(0);   
+
+  // Transform string to array and values to result
+  data.split(" ").forEach(word => {
+    var length = word.length;
+    result[length - 1] += 1;
+  });
+  
+  // Copy result data in result string
+  var resultStr = "";
+  for (var i = 0; i < MAX_LENGTH_WORD; i++) {
+      resultStr = resultStr + result[i] + " ";
+  }
+
+  console.log("sending response");
+  res.send(resultStr);
+  res.end();
+ 
+})
 
 // Create and start server
 var server = http.createServer(app);
