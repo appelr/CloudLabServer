@@ -15,6 +15,11 @@ app.use(express.urlencoded({ extended: true }));
 
 const MAX_LENGTH_WORD = 10;
 
+// Route for basic landing page
+app.get('/', function (req, res) {
+  res.send("Send a post request to /getWordLengthFrequency with a string as data to obtain the frequency of each length of the words.");
+})
+
 // Route for the frequency counter
 app.post('/getWordLengthFrequency', function (req, res) {
 	var data = req.body.data;
@@ -41,7 +46,6 @@ app.post('/getWordLengthFrequency', function (req, res) {
   console.log("sending response");
   res.send(resultStr);
   res.end();
- 
 })
 
 // Create and start server
