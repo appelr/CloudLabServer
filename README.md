@@ -1,163 +1,80 @@
-# Lab Report 2 - Randolf Appel
+# Lab Report 3 - Randolf Appel
 
-This is the report of the second lab assignment in the course [Software Development for the Cloud](https://www.hkr.se/en/course/DA376D/), done by Randolf Appel.
+This is the report of the third lab assignment in the course [Software Development for the Cloud](https://www.hkr.se/en/course/DA376D/), done by Randolf Appel.
 
-The task was to extend the backend of the program created in the first lab by adding the possibility to do calculations as well as a console application in our favourite programming language to test the route. 
-Afterwards the program should be deployed to the [Heroku Cloud](http://heroku.com).
+The task was to deploy a given server on the [Heroku Cloud](http://heroku.com) and modify it by adding logic to count the occurrences of words in a specific length.
 
 ## Project URL and Custom Routes
+The projects can be found at the following URLs:
 
-The project can be found at "[https://sdincloud.herokuapp.com](https://sdincloud.herokuapp.com)" and the custom routes are the following: 
+| Description | URL |
+|:--|:--|
+| Client | https://github.com/appelr/CloudLabClient.git |
+| Server | https://github.com/appelr/CloudLabServer.git |
 
-	- /appelrandolf    (Displays a basic landing page)
-	- /joke            (Displays a random joke)
-	- /calc            (Displays a basic landing page)
-	
+The project can be found at "[https://cloudlabserver.herokuapp.com](https://cloudlabserver.herokuapp.com)" and the custom routes are the following: 
 
-Parameters for ```/calc```: 
-
-	- operation      (add, sub, mul, div)
-	- numberone      (Number)
-	- numbertwo      (Number)
-
-When using the parameters in the route for ```/calc``` a page with the result of the calculation will be shown.
+| Route | Method | Description |
+|:--|:--|:--|
+| / | GET |	Displays a basic landing page |
+| /getWordLengthFrequency | POST | Returns a string containing information on the words |
 
 ## Screenshots
 
-Screenshots of the backend as well as the result page can be found in the screenshots directory of the uploaded project.
+Screenshots of algorithm code as well as the table printed in the command line can be found in the screenshots directory of the uploaded project.
 
 ## Procedure
 
-To accomplish the task a new route should be added to express which processes the given parameters and calculates the result.
+The procedure to accomplish the task were pretty straight forward as the an example of the service as well as the client were already uploaded.
 
-### Adding a new route to express
+### Modifying the Server
 
-The first step was to create a new route in express. This was really straight forward because I already did it in the first lab.
-
-```
-.get('/calc', (req, res) => res.send('This is the landing page for the calculator.'))
-```
-
-### Processing the parameters
-
-Now that the route is working the next step was accept and handle incoming parameters.
-This can be accomplished by accessing the parameters through ```req.query```like this: 
+First off, I imported the example app.js file. It already had an express server set up as well as some boilerplate code for the algorithm. The route for the post request is accepting a string. First I added an array in the given max length (10) with initial values of 0. Then I had to split the sting at the whitespaces to turn it into an array. Afterwards, I iterated over the new array in a foreach loop and for each element I added 1 to the count of the corresponding field in the initial array. That means, I increased the count of the word with the given length by 1.
+Finally, I transformed the array back into a string and returned it.
 
 ```
-var operation = req.query.operation;
-var numberone = req.query.numberone;
-var numbertwo = req.query.numbertwo;
+var data = req.body.data;
+
+console.log("post requested received with data: ");
+console.log(data);
+
+// Create result array and fill it with initial values
+var result = new Array(MAX_LENGTH_WORD);
+result.fill(0);   
+
+// Transform string to array and values to result
+data.split(" ").forEach(word => {
+var length = word.length;
+result[length - 1] += 1;
+});
+  
+// Copy result data in result string
+var resultStr = "";
+for (var i = 0; i < MAX_LENGTH_WORD; i++) {
+  resultStr = resultStr + result[i] + " ";
+}
+
+console.log("sending response");
+res.send(resultStr);
 ```
+### Modifying the Client
 
-The calculations can be executed using a switch statement on the operation parameter: 
-
-```
-switch (operation) {
-      case 'add':
-        result = Number(numberone) + Number(numbertwo)
-        break
-      case 'sub':
-        result = Number(numberone) - Number(numbertwo)
-        break
-      case 'mul':
-        result = Number(numberone) * Number(numbertwo)
-        break
-      case 'div':
-        result = Number(numberone) / Number(numbertwo)
-        break
-      default:
-        return
-    }
-```
-
-Finally the result of the calculation can be sent back to the client by using: 
-
-```
-res.send(result.toString());
-```
-
-### Adding error handling
-
-Once the general processing of the parameters is working some error handling should be added to avoid that the user runs into any problems.
-Therefore I added statements to check if the parameters are in the correct format and sent a response with instructions how to use the calculator correctly as inline HTML code: 
+As well as with the Server, first I added the example app.js file to the project. Then, I changed the default URL of the request to be the URL of the cloud where I deployed the server.
+After that, I installed a node.js module called [console-table-printer](https://www.npmjs.com/package/console-table-printer).
+I used this module to create a nice table output of the result on the console. To do so, I turned the result string to an array and iterated over it to enriched the array elements with informations. Finally, I used the ```printTable()``` method to print the result.
 
 ```
-if (isNaN(numberone) || isNaN(numbertwo))
-	res.send(`<h1>Calculator</h1><p>Append a query string to the url to specify the following parameters: <br><br> operation: (add, sub, mul, div) <br> numberone: Any positive number <br> numbertwo: Any positive number</p>`);
+// Get data from response
+var dataArray = res.data.split(" ");
+
+// Create a table
+const resultTable = [];
+
+// Populate the table with values
+for (let i = 0; i < dataArray.length - 1; i++) {
+  resultTable.push({ wordlength:i + 1, wordcount:dataArray[i]})
+}
+
+// Print table
+printTable(resultTable);
 ```
-
-### Creating a console application to test the route
-
-At this point the program is working and needs to be tested using a console application. I chose C# because I have the most experience with it.
-The application is also versioned in [GitHub](http://github.com) and can be found under the following URL: 
-
-[https://github.com/appelr/CalculatorTest.git](https://github.com/appelr/CalculatorTest.git)
-
-#### Creating the application
-
-I created the application by executing the following command in the command line: 
-
-```
-dotnet new console --framework net6.0
-```
-
-This creates a new .NET Framework 6.0 console application in the directory where the command was executed.
-
-#### Executing the HTTP-request
-
-In the class ```Program.cs``` I added a method to execute a HTTP-request to the server and output the result to the console:
-
-```
-private static async Task TestCalculation(string op, int numberOne, int numberTwo)
-    {
-        var uri = $"http://sdincloud.herokuapp.com/calc?operation={op}&numberone={numberOne}&numbertwo={numberTwo}";
-    
-        using var client = new HttpClient();
-        var response = await client.GetStringAsync(uri);
-                               
-        Console.WriteLine($"The server returned: {response}.");
-    }
-```
-
-Furthermore I added some console statements to display which calculation was executed. 
-
-#### Verifying the result
-
-To verify that the server is calculating the numbers correct, I added code in C# to also calculate it and to compare the results: 
-
-```
-	// ...
-	
-    var response = await client.GetStringAsync(uri);
-        
-    int localCalculation;
-    switch (op)
-    {
-        case "add":
-            Console.WriteLine($"Performing the following calculation: {numberOne} + {numberTwo}");
-            localCalculation = numberOne + numberTwo;
-            break;
-        case "sub":
-            Console.WriteLine($"Performing the following calculation: {numberOne} - {numberTwo}");
-            localCalculation = numberOne - numberTwo;
-            break;
-        case "mul":
-            Console.WriteLine($"Performing the following calculation: {numberOne} * {numberTwo}");
-            localCalculation = numberOne * numberTwo;
-            break;
-        case "div":
-            Console.WriteLine($"Performing the following calculation: {numberOne} / {numberTwo}");
-            localCalculation = numberOne / numberTwo;
-            break;
-        default:
-            return;
-    }
-        
-    Console.WriteLine($"The server returned: {response}.");
-        
-    Console.WriteLine($"Calculation is equal to the locally calculated result: {Int32.Parse(response) == localCalculation}.");
-```
-
-## Problems
-
-Because of a recent security breach, [Heroku](http://heroku.com) decided to revoke all OAuth access keys from [GitHub](http://github.com) which made automatic deployment almost impossible. Therefore I had to switch to manual deployment. 
